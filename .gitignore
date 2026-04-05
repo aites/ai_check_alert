@@ -1,0 +1,30 @@
+# Operating system files
+.DS_Store
+*.swp
+*.swo
+
+# IDE and editor settings
+.idea/
+.vscode/
+*.iml
+
+# Dart/Flutter generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+.pub-cache/
+
+# Build outputs
+build/
+coverage/
+
+# Flutter generated metadata
+**/generated_plugin_registrant.dart
+
+# Crashlytics and symbol files
+app.*.symbols
+
+# Miscellaneous
+*.log
