@@ -20,6 +20,10 @@ class NewsHomePage extends ConsumerWidget {
         title: const Text('Geminiニュース取得'),
         actions: [
           IconButton(
+            onPressed: () => context.pushNamed('geminiChat'),
+            icon: const Icon(Icons.chat_bubble_outline),
+          ),
+          IconButton(
             onPressed: () => context.pushNamed('settings'),
             icon: const Icon(Icons.settings),
           ),
@@ -49,14 +53,13 @@ class NewsHomePage extends ConsumerWidget {
             child: newsAsync.when(
               data: (items) {
                 if (items.isEmpty) {
-                  return const Center(
-                    child: Text('まだ保存済みニュースはありません。'),
-                  );
+                  return const Center(child: Text('まだ保存済みニュースはありません。'));
                 }
 
                 return RefreshIndicator(
-                  onRefresh: () =>
-                      ref.read(newsActionControllerProvider.notifier).manualFetch(),
+                  onRefresh: () => ref
+                      .read(newsActionControllerProvider.notifier)
+                      .manualFetch(),
                   child: ListView.separated(
                     padding: const EdgeInsets.all(12),
                     itemCount: items.length,
@@ -113,10 +116,7 @@ class _NewsListTile extends ConsumerWidget {
               : '${article.source} · ${article.displayDateText}',
         ),
         onTap: () {
-          context.pushNamed(
-            'newsDetail',
-            extra: article,
-          );
+          context.pushNamed('newsDetail', extra: article);
         },
       ),
     );

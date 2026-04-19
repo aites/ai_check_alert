@@ -28,3 +28,6 @@ app.*.symbols
 
 # Miscellaneous
 *.log
+
+# Local secrets
+.env

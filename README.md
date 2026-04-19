@@ -30,6 +30,7 @@ Gemini 1.5 Flash を使って、ユーザー設定のキーワードを基に最
 - `NewsHomePage`: 記事一覧、手動取得、エラー表示
 - `SettingsPage`: APIキー/キーワード/通知有無/実行時刻の編集
 - `NewsDetailPage`: 記事詳細
+- `GeminiChatPage`: Gemini 接続確認用の簡易チャット
 
 ## 主要フロー
 
@@ -58,7 +59,30 @@ flutter pub run build_runner build --delete-conflicting-outputs
 flutter run
 ```
 
-起動時に API キーが未設定の場合は、設定画面で登録してください。
+### Gemini APIキー設定（記事準拠の段階実装）
+
+1. `.env.example` をコピーして `.env` を作成
+2. `.env` の `API_KEY` に Gemini API キーを設定
+
+```bash
+cp .env.example .env
+```
+
+`.env` 例:
+
+```text
+API_KEY=your_gemini_api_key_here
+```
+
+アプリ起動時に `.env` を読み込みます。`.env` が未設定の場合は、設定画面で保存した API キー、または `--dart-define=GEMINI_API_KEY=...` を使用します。
+
+### ステップ1: Geminiチャット接続確認
+
+記事の流れに合わせ、まずは Gemini の接続確認用チャット画面を追加しています。
+
+1. ホーム画面右上のチャットアイコンをタップ
+2. メッセージを送信
+3. Gemini 応答が表示されることを確認
 
 ### APIキーの渡し方（任意）
 
@@ -88,7 +112,7 @@ flutter run
 
 ## Android 実機確認観点
 
-1. 開発端末で以下を許可  
+1. 開発端末で以下を許可
    - 通知権限（Android 13 以降）
    - 省電力設定によるバックグラウンド制限
 2. 設定画面で実行時刻・キーワード・APIキーを保存

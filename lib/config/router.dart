@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import '../features/news/domain/entities/news_article.dart';
+import '../features/gemini_chat/presentation/pages/gemini_chat_page.dart';
 import '../features/news/presentation/pages/news_detail_page.dart';
 import '../features/news/presentation/pages/news_home_page.dart';
 import '../features/news/presentation/pages/settings_page.dart';
@@ -18,6 +19,11 @@ class AppRouter {
         name: 'settings',
         path: '/settings',
         builder: (context, state) => const SettingsPage(),
+      ),
+      GoRoute(
+        name: 'geminiChat',
+        path: '/gemini-chat',
+        builder: (context, state) => const GeminiChatPage(),
       ),
       GoRoute(
         name: 'newsDetail',
