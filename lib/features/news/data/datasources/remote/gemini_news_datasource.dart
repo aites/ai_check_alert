@@ -169,12 +169,20 @@ class GeminiNewsDataSourceImpl implements GeminiNewsDataSource {
   String _buildPrompt(List<String> keywords, int maxCount) {
     final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
     return '''
-Role: プロフェッショナル・ニュースエディター
-Task: ユーザー指定トピックについて、Google検索で24時間以内の最新ニュースを最大$maxCount件収集し要約する。
+Role: Senior AI Engineer & Tech Curator
+Context: 2026年現在のAIスタック（uv, Pydantic AI, MCP, DevContainers）に精通した専門家として振る舞う。
+Task: 指定トピックについてGoogle検索で過去24時間の最新情報を検索し、エンジニア視点で最大$maxCount件をJSON出力する。
+ただし、信頼できるソースがない場合は空配列を返すこと。
+出力する記事は技術的な洞察やAPIの変更点、パフォーマンス指標、ライブラリの依存関係（uvで導入可能か）を優先して記述すること。
+記事の内容には、そのニュースがsrc/agentsやsrc/toolsの設計に与える影響を必ず含めること。一次ソース（GitHub Repo, 公式ドキュメント, Arxiv）を優先し、source_urlには検証可能なURLを使うこと。
 Rules:
 1. 事実に基づかない生成をしない。
 2. 信頼できるソースがない場合は articles を空配列にする。
 3. 出力はJSONのみ。
+4. title, summary, content, category は必ず自然な日本語で記述する。title は日本語に翻訳し、企業名・製品名・人名・OSS名・API名などの固有名詞は原文のまま維持する（固有名詞・引用を除き中国語を使わない）。
+5. Technical Insight: APIの変更点、パフォーマンス指標、ライブラリ依存関係（uvで導入可能か）を優先して記述する。
+6. Context-First: そのニュースが src/agents や src/tools の設計に与える影響を summary または content に必ず含める。
+7. Reliability: 一次ソース（GitHub Repo, 公式ドキュメント, Arxiv）を優先し、source_url は検証可能なURLを使う。
 
 Input:
 - date=$date

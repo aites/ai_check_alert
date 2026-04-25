@@ -55,7 +55,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     if (_initialized) return;
     setState(() {
       _apiKeyController.text = settings.apiKey;
-      _keywordsController.text = settings.keywords.join(',');
+      _keywordsController.text = settings.keywords.join('\n');
       _selectedTime = TimeOfDay(
         hour: settings.scheduledHour,
         minute: settings.scheduledMinute,
@@ -104,11 +104,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   NewsSchedulerInput _buildCurrentSettings(int failureCount) {
-    final keywords = _keywordsController.text
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList(growable: false);
+    final keywords = _parseKeywords(_keywordsController.text);
 
     return NewsSchedulerInput(
       apiKey: _apiKeyController.text.trim(),
@@ -124,6 +120,15 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     return keywords.map((e) => e.trim()).where((e) => e.isNotEmpty).join('|');
   }
 
+  /// Parses keyword input allowing both comma and newline separators.
+  List<String> _parseKeywords(String raw) {
+    return raw
+        .split(RegExp(r'[,\n]'))
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList(growable: false);
+  }
+
   Future<void> _saveSettings(NewsSchedulerInput settings) async {
     if (!(_formKey.currentState?.validate() ?? false)) {
       return;
@@ -132,11 +137,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final notifier = ref.read(newsActionControllerProvider.notifier);
     final navigator = Navigator.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final keywords = _keywordsController.text
-        .split(',')
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList(growable: false);
+    final keywords = _parseKeywords(_keywordsController.text);
 
     final nextSettings = NewsSchedulerInput(
       apiKey: _apiKeyController.text.trim(),
@@ -246,16 +247,17 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _keywordsController,
+                    minLines: 3,
+                    maxLines: 6,
+                    keyboardType: TextInputType.multiline,
                     decoration: const InputDecoration(
-                      labelText: '検索キーワード（カンマ区切り）',
+                      alignLabelWithHint: true,
+                      labelText: '検索キーワード（改行またはカンマ区切り）',
                       border: OutlineInputBorder(),
-                      helperText: '例: AI,テック,プレス',
+                      helperText: '例:\nAI\nテック\nプレス',
                     ),
                     validator: (value) {
-                      final hasKeyword = (value ?? '')
-                          .split(',')
-                          .map((e) => e.trim())
-                          .any((e) => e.isNotEmpty);
+                      final hasKeyword = _parseKeywords(value ?? '').isNotEmpty;
                       if (!hasKeyword) {
                         return '最低1つはキーワードを設定してください。';
                       }

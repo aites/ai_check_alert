@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'config/router.dart';
@@ -44,11 +45,17 @@ class _AppState extends State<App> {
 
   @override
   Widget build(BuildContext context) {
+    final baseTheme = ThemeData(
+      colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
+      useMaterial3: true,
+    );
+
     return MaterialApp.router(
       title: 'Gemini News Scheduler',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
-        useMaterial3: true,
+      debugShowCheckedModeBanner: false,
+      locale: const Locale('ja', 'JP'),
+      theme: baseTheme.copyWith(
+        textTheme: GoogleFonts.notoSansJpTextTheme(baseTheme.textTheme),
       ),
       routerConfig: AppRouter.router,
     );

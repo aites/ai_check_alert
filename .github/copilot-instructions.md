@@ -39,3 +39,19 @@
 - **Background Tasks:** The Workmanager `callbackDispatcher` and its tasks MUST be **top-level functions**.
 - **Data Retention:** Database cleanup (deleting data older than 14 days) must execute immediately after the Workmanager fetches new data.
 - **Architecture:** Use clean architecture: Separate UI, Business Logic (Providers), and Services (API/DB).
+
+# Flutter Design & UI Skills
+
+- UI framework: Flutter 3.x (Material 3 / Adaptive Design)
+- State Management: Riverpod (prefer Functional Widgets)
+- Design Tokens: Reference `lib/theme/tokens.g.dart` for colors/spacing.
+- Anti-Patterns: Avoid deeply nested build methods; extract to small stateless widgets.
+- Optimization: Use `const` constructors everywhere possible for repainting efficiency.
+
+## News/Feed UI Specifics
+
+- **Card Design**: Use `Card` with `elevation: 0` and a subtle `BorderSide` for a modern, flat look.
+- **Typography**: News headlines must use `titleLarge` with `fontWeight: FontWeight.bold` and `maxLines: 2`.
+- **Imagery**: Use `ClipRRect` (border-radius: 12) for news thumbnails. Implement a shimmer effect (loading state) for `Image.network`.
+- **Layout**: For news lists, use `SliverList` to ensure smooth scrolling. Add horizontal padding (16px) consistent with the system's `AppSpacing`.
+- **Visual Hierarchy**: Use `LabelSmall` with `colorScheme.onSurfaceVariant` for "Time ago" or "Source" metadata to de-emphasize non-essential info.

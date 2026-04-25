@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../errors/app_error.dart';
 import '../../domain/entities/news_article.dart';
@@ -18,10 +19,7 @@ class NewsHomePage extends ConsumerStatefulWidget {
 
 class _NewsHomePageState extends ConsumerState<NewsHomePage> {
   static const _prefsPrefix = 'news_home';
-  static const _prefsCategory = '$_prefsPrefix.category';
   static const _prefsSortMode = '$_prefsPrefix.sortMode';
-  static const _allCategory = 'すべて';
-  String _selectedCategory = _allCategory;
   _NewsSortMode _sortMode = _NewsSortMode.newest;
 
   @override
@@ -68,14 +66,7 @@ class _NewsHomePageState extends ConsumerState<NewsHomePage> {
                   return const Center(child: Text('まだ保存済みニュースはありません。'));
                 }
 
-                final categories = <String>{
-                  _allCategory,
-                  ...items.map((e) => e.category),
-                }.toList(growable: false);
-                final activeCategory = categories.contains(_selectedCategory)
-                    ? _selectedCategory
-                    : _allCategory;
-                final visible = _filterAndSortNews(items, activeCategory);
+                final visible = _sortNews(items);
 
                 final grouped = _NewsDateGroup.from(visible);
 
@@ -83,47 +74,40 @@ class _NewsHomePageState extends ConsumerState<NewsHomePage> {
                   onRefresh: () => ref
                       .read(newsActionControllerProvider.notifier)
                       .manualFetch(),
-                  child: ListView(
-                    padding: const EdgeInsets.all(12),
-                    children: [
-                      _NewsListControls(
-                        categories: categories,
-                        selectedCategory: activeCategory,
-                        sortMode: _sortMode,
-                        onCategoryChanged: (value) {
-                          setState(() {
-                            _selectedCategory = value;
-                          });
-                          _savePreferences();
-                        },
-                        onSortModeChanged: (value) {
-                          setState(() {
-                            _sortMode = value;
-                          });
-                          _savePreferences();
-                        },
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                        sliver: SliverToBoxAdapter(
+                          child: _NewsListControls(
+                            totalCount: visible.length,
+                            sortMode: _sortMode,
+                            onSortModeChanged: (value) {
+                              setState(() {
+                                _sortMode = value;
+                              });
+                              _savePreferences();
+                            },
+                          ),
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      if (grouped.isEmpty)
-                        _NoResultsCard(
-                          onReset: () {
-                            setState(() {
-                              _selectedCategory = _allCategory;
-                              _sortMode = _NewsSortMode.newest;
-                            });
-                            _savePreferences();
+                      const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverList.builder(
+                          itemCount: grouped.length,
+                          itemBuilder: (context, index) {
+                            final section = grouped[index];
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index == grouped.length - 1 ? 24 : 14,
+                              ),
+                              child: _NewsDateSection(group: section),
+                            );
                           },
-                        )
-                      else
-                        ...List.generate(grouped.length, (index) {
-                          final section = grouped[index];
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              bottom: index == grouped.length - 1 ? 0 : 12,
-                            ),
-                            child: _NewsDateSection(group: section),
-                          );
-                        }),
+                        ),
+                      ),
                     ],
                   ),
                 );
@@ -161,20 +145,8 @@ class _NewsHomePageState extends ConsumerState<NewsHomePage> {
     return '通信エラーが発生しました。';
   }
 
-  List<NewsArticle> _filterAndSortNews(
-    List<NewsArticle> source,
-    String selectedCategory,
-  ) {
-    final filtered = source
-        .where((article) {
-          if (selectedCategory == _allCategory) {
-            return true;
-          }
-          return article.category == selectedCategory;
-        })
-        .toList(growable: false);
-
-    final sorted = [...filtered];
+  List<NewsArticle> _sortNews(List<NewsArticle> source) {
+    final sorted = [...source];
     sorted.sort((a, b) {
       switch (_sortMode) {
         case _NewsSortMode.newest:
@@ -192,7 +164,6 @@ class _NewsHomePageState extends ConsumerState<NewsHomePage> {
 
   Future<void> _restorePreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    final restoredCategory = prefs.getString(_prefsCategory) ?? _allCategory;
     final restoredSort = prefs.getString(_prefsSortMode);
 
     final sortMode = _NewsSortMode.values.firstWhere(
@@ -202,14 +173,12 @@ class _NewsHomePageState extends ConsumerState<NewsHomePage> {
 
     if (!mounted) return;
     setState(() {
-      _selectedCategory = restoredCategory;
       _sortMode = sortMode;
     });
   }
 
   Future<void> _savePreferences() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefsCategory, _selectedCategory);
     await prefs.setString(_prefsSortMode, _sortMode.name);
   }
 }
@@ -219,44 +188,40 @@ enum _NewsSortMode { newest, importance }
 /// Control area for category filtering and list sorting.
 class _NewsListControls extends StatelessWidget {
   const _NewsListControls({
-    required this.categories,
-    required this.selectedCategory,
+    required this.totalCount,
     required this.sortMode,
-    required this.onCategoryChanged,
     required this.onSortModeChanged,
   });
 
-  final List<String> categories;
-  final String selectedCategory;
+  final int totalCount;
   final _NewsSortMode sortMode;
-  final ValueChanged<String> onCategoryChanged;
   final ValueChanged<_NewsSortMode> onSortModeChanged;
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Card(
+      color: colorScheme.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: colorScheme.outlineVariant),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children: categories
-                    .map((category) {
-                      final selected = category == selectedCategory;
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ChoiceChip(
-                          label: Text(category),
-                          selected: selected,
-                          onSelected: (_) => onCategoryChanged(category),
-                        ),
-                      );
-                    })
-                    .toList(growable: false),
-              ),
+            Row(
+              children: [
+                Icon(
+                  Icons.newspaper_outlined,
+                  size: 18,
+                  color: colorScheme.primary,
+                ),
+                const SizedBox(width: 8),
+                Text('表示中 $totalCount 件'),
+              ],
             ),
             const SizedBox(height: 12),
             SegmentedButton<_NewsSortMode>(
@@ -277,30 +242,6 @@ class _NewsListControls extends StatelessWidget {
                 onSortModeChanged(value.first);
               },
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Empty-state card for filtered result sets.
-class _NoResultsCard extends StatelessWidget {
-  const _NoResultsCard({required this.onReset});
-
-  final VoidCallback onReset;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('条件に一致する記事がありません。'),
-            const SizedBox(height: 12),
-            OutlinedButton(onPressed: onReset, child: const Text('絞り込みを解除')),
           ],
         ),
       ),
@@ -343,11 +284,16 @@ class _NewsDateSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 10),
           child: Row(
             children: [
               Expanded(
-                child: Text(group.headerLabel, style: textTheme.titleMedium),
+                child: Text(
+                  group.headerLabel,
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -380,48 +326,151 @@ class _NewsCard extends StatelessWidget {
 
   final NewsArticle article;
 
+  /// Selects a badge color from article importance.
+  Color _importanceColor(ColorScheme colorScheme) {
+    if (article.importance >= 5) {
+      return colorScheme.errorContainer;
+    }
+    if (article.importance >= 3) {
+      return colorScheme.tertiaryContainer;
+    }
+    return colorScheme.primaryContainer;
+  }
+
+  /// Picks readable badge foreground color paired with [_importanceColor].
+  Color _importanceOnColor(ColorScheme colorScheme) {
+    if (article.importance >= 5) {
+      return colorScheme.onErrorContainer;
+    }
+    if (article.importance >= 3) {
+      return colorScheme.onTertiaryContainer;
+    }
+    return colorScheme.onPrimaryContainer;
+  }
+
+  /// Returns a compact source label from URL host.
+  String _sourceLabel() {
+    final uri = Uri.tryParse(article.sourceUrl);
+    final host = uri?.host.trim();
+    if (host == null || host.isEmpty) {
+      return '参考リンク';
+    }
+    return host.replaceFirst('www.', '');
+  }
+
+  /// Opens source URL with the default browser.
+  Future<void> _openSource(BuildContext context) async {
+    final uri = Uri.tryParse(article.sourceUrl);
+    if (uri == null) {
+      return;
+    }
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!launched && context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('参考リンクを開けませんでした。')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+    final importanceColor = _importanceColor(colorScheme);
+    final onImportanceColor = _importanceOnColor(colorScheme);
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 10),
       child: Card(
+        elevation: 0,
+        color: colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colorScheme.outlineVariant),
+        ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           onTap: () {
             context.pushNamed('newsDetail', extra: article);
           },
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Chip(
+                        label: Text(article.category),
+                        backgroundColor: colorScheme.primaryContainer,
+                        labelStyle: textTheme.labelMedium?.copyWith(
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: importanceColor,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '重要度 ${article.importance}',
+                        style: textTheme.labelMedium?.copyWith(
+                          color: onImportanceColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
                 Text(
                   article.title,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    Chip(
-                      label: Text(article.category),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                    Chip(
-                      label: Text('重要度 ${article.importance}'),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ],
+                  style: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   article.summary,
                   maxLines: 3,
                   overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.language,
+                      size: 16,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        _sourceLabel(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: article.sourceUrl.isEmpty
+                          ? null
+                          : () => _openSource(context),
+                      icon: const Icon(Icons.open_in_new, size: 16),
+                      label: const Text('参考リンク'),
+                    ),
+                  ],
                 ),
               ],
             ),
