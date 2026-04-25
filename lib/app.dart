@@ -51,7 +51,7 @@ class _AppState extends State<App> {
     );
 
     return MaterialApp.router(
-      title: 'Gemini News Scheduler',
+      title: '毎日AI情報',
       debugShowCheckedModeBanner: false,
       locale: const Locale('ja', 'JP'),
       theme: baseTheme.copyWith(
