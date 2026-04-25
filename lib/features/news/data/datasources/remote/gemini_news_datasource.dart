@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -129,7 +130,8 @@ class GeminiNewsDataSourceImpl implements GeminiNewsDataSource {
           message.contains('timeoutexception')) {
         throw AppError(
           type: AppErrorType.network,
-          message: 'ネットワーク到達性に問題があります。回線・VPN・DNS設定を確認してください。',
+          message:
+              'ネットワーク到達性またはGemini応答遅延の可能性があります。回線・VPN・DNS設定を確認して再試行してください。',
           details: error.toString(),
         );
       }
@@ -171,40 +173,19 @@ class GeminiNewsDataSourceImpl implements GeminiNewsDataSource {
     final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final defaultTopics = kDefaultNewsKeywords.join(', ');
     return '''
-Role: Senior AI Engineer & Tech Curator
-Context: 2026年現在のAIスタック（$defaultTopics）に精通した専門家として振る舞う。
-Task: 指定トピックについてGoogle検索で過去24時間の最新情報を検索し、エンジニア視点で最大$maxCount件をJSON出力する。
-ただし、信頼できるソースがない場合は空配列を返すこと。
-出力する記事は技術的な洞察やAPIの変更点、パフォーマンス指標、ライブラリの依存関係（uvで導入可能か）を優先して記述すること。
-記事の内容には、そのニュースがsrc/agentsやsrc/toolsの設計に与える影響を必ず含めること。一次ソース（GitHub Repo, 公式ドキュメント, Arxiv）を優先し、source_urlには検証可能なURLを使うこと。
-Rules:
-1. 事実に基づかない生成をしない。
-2. 信頼できるソースがない場合は articles を空配列にする。
-3. 出力はJSONのみ。
-4. title, summary, content, category は必ず自然な日本語で記述する。title は日本語に翻訳し、企業名・製品名・人名・OSS名・API名などの固有名詞は原文のまま維持する（固有名詞・引用を除き中国語を使わない）。
-5. Technical Insight: APIの変更点、パフォーマンス指標、ライブラリ依存関係（uvで導入可能か）を優先して記述する。
-6. Context-First: そのニュースが src/agents や src/tools の設計に与える影響を summary または content に必ず含める。
-7. Reliability: 一次ソース（GitHub Repo, 公式ドキュメント, Arxiv）を優先し、source_url は検証可能なURLを使う。
+あなたはAI技術ニュースの編集者です。
+対象トピックは「$defaultTopics, ${keywords.join(', ')}」。
+date=$date の時点で、過去24時間の信頼できる最新情報を最大$maxCount件、Google検索ベースで選定してください。
+一次ソース（GitHub公式、公式ドキュメント、Arxiv、公式ブログ）を優先し、検証不能な情報は除外してください。
+信頼できる情報が無ければ articles は空配列で返してください。
+出力はJSONのみ。説明文やMarkdownは禁止。
+title/summary/content/category は自然な日本語。
+titleは日本語化するが、企業名・製品名・人名・OSS名・API名など固有名詞は原文維持。
+summary または content に、src/agents または src/tools への設計影響を必ず含めること。
+importance は 1-5 の整数。
 
-Input:
-- date=$date
-- topic=${keywords.join(', ')}
-
-JSON contract:
-{
-  "date": "YYYY-MM-DD",
-  "articles": [
-    {
-      "id": "string",
-      "title": "string",
-      "summary": "string",
-      "content": "string",
-      "category": "string",
-      "source_url": "string",
-      "importance": 1
-    }
-  ]
-}
+返却JSONスキーマ:
+{"date":"YYYY-MM-DD","articles":[{"id":"string","title":"string","summary":"string","content":"string","category":"string","source_url":"string","importance":1}]}
 ''';
   }
 
@@ -223,7 +204,7 @@ JSON contract:
         );
       } catch (error) {
         lastError = error;
-        if (_isModelNotFound(error)) {
+        if (_isModelNotFound(error) || _isQuotaError(error)) {
           continue;
         }
         rethrow;
@@ -249,17 +230,30 @@ JSON contract:
       <String, String>{'key': apiKey},
     );
 
-    var response = await _postGenerateContent(
-      uri: uri,
-      prompt: prompt,
-      useJsonMimeType: true,
-    );
+    http.Response response;
+    try {
+      response = await _postGenerateContent(
+        uri: uri,
+        prompt: prompt,
+        useJsonMimeType: true,
+        useSearchTool: true,
+      );
+    } on TimeoutException {
+      // Fallback path: retry once without search tool to reduce latency spikes.
+      response = await _postGenerateContent(
+        uri: uri,
+        prompt: prompt,
+        useJsonMimeType: false,
+        useSearchTool: false,
+      );
+    }
 
     if (_isToolJsonMimeUnsupported(response)) {
       response = await _postGenerateContent(
         uri: uri,
         prompt: prompt,
         useJsonMimeType: false,
+        useSearchTool: true,
       );
     }
 
@@ -356,7 +350,8 @@ JSON contract:
     required Uri uri,
     required String prompt,
     required bool useJsonMimeType,
-  }) {
+    required bool useSearchTool,
+  }) async {
     final payload = <String, dynamic>{
       'contents': <Map<String, dynamic>>[
         <String, dynamic>{
@@ -365,9 +360,10 @@ JSON contract:
           ],
         },
       ],
-      'tools': <Map<String, dynamic>>[
-        <String, dynamic>{'google_search': <String, dynamic>{}},
-      ],
+      if (useSearchTool)
+        'tools': <Map<String, dynamic>>[
+          <String, dynamic>{'google_search': <String, dynamic>{}},
+        ],
     };
 
     if (useJsonMimeType) {
@@ -376,13 +372,33 @@ JSON contract:
       };
     }
 
-    return http
-        .post(
-          uri,
-          headers: const <String, String>{'Content-Type': 'application/json'},
-          body: jsonEncode(payload),
-        )
-        .timeout(const Duration(seconds: 25));
+    final timeouts = <Duration>[
+      const Duration(seconds: 45),
+      const Duration(seconds: 75),
+    ];
+
+    TimeoutException? lastTimeout;
+    for (var i = 0; i < timeouts.length; i++) {
+      try {
+        return await http
+            .post(
+              uri,
+              headers: const <String, String>{
+                'Content-Type': 'application/json',
+              },
+              body: jsonEncode(payload),
+            )
+            .timeout(timeouts[i]);
+      } on TimeoutException catch (error) {
+        lastTimeout = error;
+        if (i == timeouts.length - 1) {
+          rethrow;
+        }
+      }
+    }
+
+    throw lastTimeout ??
+        TimeoutException('Gemini request timed out without response.');
   }
 
   /// Returns true when Gemini rejects tool use with JSON MIME type.
@@ -406,6 +422,17 @@ JSON contract:
         lower.contains('not supported for generatecontent') ||
         (lower.contains('model') && lower.contains('not supported'));
     return notFound || notSupported;
+  }
+
+  bool _isQuotaError(Object error) {
+    if (error is AppError && error.type == AppErrorType.quota) {
+      return true;
+    }
+
+    final lower = error.toString().toLowerCase();
+    return lower.contains('429') ||
+        lower.contains('quota') ||
+        lower.contains('resource_exhausted');
   }
 
   /// Extracts JSON object text from raw model output.

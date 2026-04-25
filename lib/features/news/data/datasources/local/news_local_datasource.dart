@@ -21,26 +21,47 @@ abstract class NewsLocalDataSource {
 
 class IsarNewsLocalDataSource implements NewsLocalDataSource {
   IsarNewsLocalDataSource() {
-    _isarFuture = _openDb();
+    _isarFuture = _getOrOpenDb();
   }
 
   late final Future<Isar> _isarFuture;
+  static const _dbName = 'news_db';
+  static Future<Isar>? _sharedIsarFuture;
 
-  Future<Isar> _openDb() async {
+  Future<Isar> _getOrOpenDb() {
+    final existing = Isar.getInstance(_dbName);
+    if (existing != null) {
+      return Future<Isar>.value(existing);
+    }
+
+    final inFlight = _sharedIsarFuture;
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final opening = _openDbInternal();
+    _sharedIsarFuture = opening;
+    return opening;
+  }
+
+  Future<Isar> _openDbInternal() async {
     final existing = Isar.getInstance(_dbName);
     if (existing != null) {
       return existing;
     }
 
     final dir = await getApplicationDocumentsDirectory();
-    return Isar.open(
-      [NewsArticleModelSchema],
-      directory: dir.path,
-      name: _dbName,
-    );
+    try {
+      return await Isar.open(
+        [NewsArticleModelSchema],
+        directory: dir.path,
+        name: _dbName,
+      );
+    } catch (_) {
+      _sharedIsarFuture = null;
+      rethrow;
+    }
   }
-
-  static const _dbName = 'news_db';
 
   @override
   Future<void> saveNews(List<NewsArticle> articles) async {

@@ -32,7 +32,7 @@ void newsWorkerDispatcher() {
         FetchNewsByScheduleParams(
           apiKey: settings.apiKey,
           keywords: settings.keywords,
-          maxCount: 10,
+          maxCount: 5,
         ),
       );
 

@@ -142,7 +142,11 @@ class _NewsHomePageState extends ConsumerState<NewsHomePage> {
     if (error is Exception) {
       return error.toString();
     }
-    return '通信エラーが発生しました。';
+    final text = error.toString().trim();
+    if (text.isNotEmpty && text != 'null') {
+      return text;
+    }
+    return '通信エラーが発生しました。(原因不明)';
   }
 
   List<NewsArticle> _sortNews(List<NewsArticle> source) {
