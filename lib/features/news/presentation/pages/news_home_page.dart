@@ -399,17 +399,7 @@ class _NewsCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Expanded(
-                      child: Chip(
-                        label: Text(article.category),
-                        backgroundColor: colorScheme.primaryContainer,
-                        labelStyle: textTheme.labelMedium?.copyWith(
-                          color: colorScheme.onPrimaryContainer,
-                        ),
-                        visualDensity: VisualDensity.compact,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
+                    const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
