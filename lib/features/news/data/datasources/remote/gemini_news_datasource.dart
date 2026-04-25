@@ -49,7 +49,9 @@ class GeminiNewsDataSourceImpl implements GeminiNewsDataSource {
         throw AppError(type: AppErrorType.parse, message: 'Geminiからの応答が空です。');
       }
 
-      final decoded = jsonDecode(text);
+      final normalizedJsonText = _extractJsonPayload(text);
+
+      final decoded = jsonDecode(normalizedJsonText);
       if (decoded is! Map<String, dynamic>) {
         throw AppError(
           type: AppErrorType.parse,
@@ -120,12 +122,32 @@ class GeminiNewsDataSourceImpl implements GeminiNewsDataSource {
       rethrow;
     } catch (error, stack) {
       final message = error.toString().toLowerCase();
+      if (message.contains('failed host lookup') ||
+          message.contains('socketexception') ||
+          message.contains('timed out') ||
+          message.contains('timeoutexception')) {
+        throw AppError(
+          type: AppErrorType.network,
+          message: 'ネットワーク到達性に問題があります。回線・VPN・DNS設定を確認してください。',
+          details: error.toString(),
+        );
+      }
+      if (message.contains('failed_precondition') ||
+          message.contains('free tier is not available') ||
+          message.contains('billing')) {
+        throw AppError(
+          type: AppErrorType.unknown,
+          message: 'Gemini APIの前提条件エラーです。課金設定または利用リージョンを確認してください。',
+          details: error.toString(),
+        );
+      }
       if (message.contains('api key not valid') ||
           message.contains('permission denied') ||
+          message.contains('reported as leaked') ||
           message.contains('403')) {
         throw AppError(
           type: AppErrorType.authentication,
-          message: 'Gemini APIキーが無効か権限不足の可能性があります。',
+          message: 'Gemini APIキーが無効・権限不足・または漏洩により無効化された可能性があります。',
           details: error.toString(),
         );
       }
@@ -138,7 +160,7 @@ class GeminiNewsDataSourceImpl implements GeminiNewsDataSource {
       }
       throw AppError(
         type: AppErrorType.network,
-        message: 'Gemini APIの取得中にエラーが発生しました。',
+        message: 'Gemini API呼び出しで未分類エラーが発生しました。',
         details: kDebugMode ? '$error\n$stack' : null,
       );
     }
@@ -217,54 +239,72 @@ JSON contract:
       <String, String>{'key': apiKey},
     );
 
-    final payload = <String, dynamic>{
-      'contents': <Map<String, dynamic>>[
-        <String, dynamic>{
-          'parts': <Map<String, dynamic>>[
-            <String, dynamic>{'text': prompt},
-          ],
-        },
-      ],
-      'tools': <Map<String, dynamic>>[
-        <String, dynamic>{'google_search': <String, dynamic>{}},
-      ],
-      'generationConfig': <String, dynamic>{
-        'responseMimeType': 'application/json',
-      },
-    };
+    var response = await _postGenerateContent(
+      uri: uri,
+      prompt: prompt,
+      useJsonMimeType: true,
+    );
 
-    final response = await http
-        .post(
-          uri,
-          headers: const <String, String>{'Content-Type': 'application/json'},
-          body: jsonEncode(payload),
-        )
-        .timeout(const Duration(seconds: 25));
+    if (_isToolJsonMimeUnsupported(response)) {
+      response = await _postGenerateContent(
+        uri: uri,
+        prompt: prompt,
+        useJsonMimeType: false,
+      );
+    }
 
     if (response.statusCode >= 400) {
       final body = response.body;
       final lower = body.toLowerCase();
+      final summary = _summarizeErrorBody(body);
+      final details = 'HTTP ${response.statusCode}: $summary';
+      if (response.statusCode == 400 &&
+          (lower.contains('failed_precondition') ||
+              lower.contains('free tier is not available') ||
+              lower.contains('billing'))) {
+        throw AppError(
+          type: AppErrorType.unknown,
+          message: 'Gemini APIの前提条件エラーです。課金設定または利用リージョンを確認してください。',
+          details: details,
+        );
+      }
       if (response.statusCode == 401 || response.statusCode == 403) {
         throw AppError(
           type: AppErrorType.authentication,
           message: 'Gemini APIキーが無効か権限不足の可能性があります。',
-          details: body,
+          details: details,
+        );
+      }
+      if (lower.contains('reported as leaked')) {
+        throw AppError(
+          type: AppErrorType.authentication,
+          message: 'このAPIキーは漏洩扱いでブロックされた可能性があります。AI Studioで新しいキーを作成してください。',
+          details: details,
         );
       }
       if (response.statusCode == 429 || lower.contains('quota')) {
         throw AppError(
           type: AppErrorType.quota,
           message: 'Gemini APIの利用上限に達した可能性があります。',
-          details: body,
+          details: details,
         );
       }
       if (_isModelNotFound(body)) {
         throw StateError(body);
       }
+      if (response.statusCode == 500 ||
+          response.statusCode == 503 ||
+          response.statusCode == 504) {
+        throw AppError(
+          type: AppErrorType.network,
+          message: 'Gemini APIサーバー側の一時エラーの可能性があります。時間をおいて再試行してください。',
+          details: details,
+        );
+      }
       throw AppError(
         type: AppErrorType.network,
-        message: 'Gemini APIの取得中にエラーが発生しました。',
-        details: body,
+        message: 'Gemini API呼び出しに失敗しました。HTTPステータスを確認してください。',
+        details: details,
       );
     }
 
@@ -301,6 +341,53 @@ JSON contract:
     return text;
   }
 
+  /// Sends generateContent request with optional JSON response MIME type.
+  Future<http.Response> _postGenerateContent({
+    required Uri uri,
+    required String prompt,
+    required bool useJsonMimeType,
+  }) {
+    final payload = <String, dynamic>{
+      'contents': <Map<String, dynamic>>[
+        <String, dynamic>{
+          'parts': <Map<String, dynamic>>[
+            <String, dynamic>{'text': prompt},
+          ],
+        },
+      ],
+      'tools': <Map<String, dynamic>>[
+        <String, dynamic>{'google_search': <String, dynamic>{}},
+      ],
+    };
+
+    if (useJsonMimeType) {
+      payload['generationConfig'] = <String, dynamic>{
+        'responseMimeType': 'application/json',
+      };
+    }
+
+    return http
+        .post(
+          uri,
+          headers: const <String, String>{'Content-Type': 'application/json'},
+          body: jsonEncode(payload),
+        )
+        .timeout(const Duration(seconds: 25));
+  }
+
+  /// Returns true when Gemini rejects tool use with JSON MIME type.
+  bool _isToolJsonMimeUnsupported(http.Response response) {
+    if (response.statusCode != 400) {
+      return false;
+    }
+    final lower = response.body.toLowerCase();
+    return lower.contains('invalid_argument') &&
+        lower.contains('tool use') &&
+        lower.contains('response mime type') &&
+        lower.contains('application/json') &&
+        lower.contains('unsupported');
+  }
+
   bool _isModelNotFound(Object error) {
     final lower = error.toString().toLowerCase();
     final notFound =
@@ -309,6 +396,68 @@ JSON contract:
         lower.contains('not supported for generatecontent') ||
         (lower.contains('model') && lower.contains('not supported'));
     return notFound || notSupported;
+  }
+
+  /// Extracts JSON object text from raw model output.
+  String _extractJsonPayload(String rawText) {
+    final trimmed = rawText.trim();
+
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      return trimmed;
+    }
+
+    final fencePattern = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```');
+    final fencedMatch = fencePattern.firstMatch(trimmed);
+    if (fencedMatch != null) {
+      final candidate = fencedMatch.group(1)?.trim() ?? '';
+      if (candidate.startsWith('{') && candidate.endsWith('}')) {
+        return candidate;
+      }
+    }
+
+    final start = trimmed.indexOf('{');
+    final end = trimmed.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      return trimmed.substring(start, end + 1);
+    }
+
+    return trimmed;
+  }
+
+  /// Extracts a short error summary from Gemini HTTP error response body.
+  String _summarizeErrorBody(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) {
+        final error = decoded['error'];
+        if (error is Map<String, dynamic>) {
+          final status = error['status']?.toString().trim();
+          final message = error['message']?.toString().trim();
+          final parts = <String>[];
+          if (status != null && status.isNotEmpty) {
+            parts.add(status);
+          }
+          if (message != null && message.isNotEmpty) {
+            parts.add(message);
+          }
+          if (parts.isNotEmpty) {
+            return parts.join(' - ');
+          }
+        }
+      }
+    } catch (_) {
+      // Falls back to raw body snippet when JSON decoding fails.
+    }
+
+    final normalized = body.replaceAll(RegExp(r'\s+'), ' ').trim();
+    if (normalized.isEmpty) {
+      return 'No response body';
+    }
+    const maxLength = 220;
+    if (normalized.length <= maxLength) {
+      return normalized;
+    }
+    return '${normalized.substring(0, maxLength)}...';
   }
 
   List<String> _cleanupKeywords(List<String> keywords) {

@@ -162,9 +162,28 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     }
   }
 
+  /// Runs news fetch immediately and shows feedback in settings screen.
+  Future<void> _runManualFetch() async {
+    final notifier = ref.read(newsActionControllerProvider.notifier);
+    final messenger = ScaffoldMessenger.of(context);
+
+    try {
+      await notifier.manualFetch();
+      if (!mounted) return;
+      messenger.showSnackBar(const SnackBar(content: Text('ニュースを取得しました。')));
+    } catch (error) {
+      if (!mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('今すぐ実行に失敗しました: ${_errorMessage(error)}')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final settingsAsync = ref.watch(newsSchedulerSettingsProvider);
+    final actionState = ref.watch(newsActionControllerProvider);
+    final isActionLoading = actionState is AsyncLoading;
 
     return settingsAsync.when(
       loading: () => Scaffold(
@@ -265,10 +284,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: () => ref
-                        .read(newsActionControllerProvider.notifier)
-                        .manualFetch(),
-                    child: const Text('今すぐ実行'),
+                    onPressed: isActionLoading ? null : _runManualFetch,
+                    child: Text(isActionLoading ? '実行中...' : '今すぐ実行'),
                   ),
                 ],
               ),
@@ -281,7 +298,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   String _errorMessage(Object error) {
     if (error is AppError) {
-      return error.userMessage;
+      final details = error.details?.trim();
+      if (details == null || details.isEmpty) {
+        return error.message;
+      }
+      final compact = details.replaceAll(RegExp(r'\s+'), ' ').trim();
+      const maxLength = 140;
+      final snippet = compact.length <= maxLength
+          ? compact
+          : '${compact.substring(0, maxLength)}...';
+      return '${error.message} ($snippet)';
     }
     return error.toString();
   }

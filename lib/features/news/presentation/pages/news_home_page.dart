@@ -144,7 +144,16 @@ class _NewsHomePageState extends ConsumerState<NewsHomePage> {
 
   String _errorMessage(Object error) {
     if (error is AppError) {
-      return error.userMessage;
+      final details = error.details?.trim();
+      if (details == null || details.isEmpty) {
+        return error.message;
+      }
+      final compact = details.replaceAll(RegExp(r'\s+'), ' ').trim();
+      const maxLength = 180;
+      final snippet = compact.length <= maxLength
+          ? compact
+          : '${compact.substring(0, maxLength)}...';
+      return '${error.message} ($snippet)';
     }
     if (error is Exception) {
       return error.toString();
