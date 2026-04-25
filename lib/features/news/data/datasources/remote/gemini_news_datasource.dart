@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 
 import '../../../../../config/api_keys.dart';
+import '../../../../../config/news_prompt_defaults.dart';
 import '../../../../../config/gemini_models.dart';
 import '../../../../errors/app_error.dart';
 import '../../../domain/entities/news_article.dart';
@@ -168,9 +169,10 @@ class GeminiNewsDataSourceImpl implements GeminiNewsDataSource {
 
   String _buildPrompt(List<String> keywords, int maxCount) {
     final date = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final defaultTopics = kDefaultNewsKeywords.join(', ');
     return '''
 Role: Senior AI Engineer & Tech Curator
-Context: 2026年現在のAIスタック（uv, Pydantic AI, MCP, DevContainers）に精通した専門家として振る舞う。
+Context: 2026年現在のAIスタック（$defaultTopics）に精通した専門家として振る舞う。
 Task: 指定トピックについてGoogle検索で過去24時間の最新情報を検索し、エンジニア視点で最大$maxCount件をJSON出力する。
 ただし、信頼できるソースがない場合は空配列を返すこと。
 出力する記事は技術的な洞察やAPIの変更点、パフォーマンス指標、ライブラリの依存関係（uvで導入可能か）を優先して記述すること。

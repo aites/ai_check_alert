@@ -62,7 +62,7 @@ flutter run
 ### Gemini APIキー設定（記事準拠の段階実装）
 
 1. `.env.example` をコピーして `.env` を作成
-2. `.env` の `API_KEY` に Gemini API キーを設定
+2. `.env` の `GEMINI_API_KEY`（または互換キー `API_KEY`）に Gemini API キーを設定
 
 ```bash
 cp .env.example .env
@@ -71,7 +71,7 @@ cp .env.example .env
 `.env` 例:
 
 ```text
-API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 アプリ起動時に `.env` を読み込みます。`.env` が未設定の場合は、設定画面で保存した API キー、または `--dart-define=GEMINI_API_KEY=...` を使用します。

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../../config/api_keys.dart';
+import '../../../../../config/news_prompt_defaults.dart';
 import '../../../errors/app_error.dart';
 import '../../../scheduler/services/scheduler_input.dart';
 import '../controllers/news_controller.dart';
@@ -53,16 +55,28 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   void _loadFromState(NewsSchedulerInput settings) {
     if (_initialized) return;
+    final hydrated = _hydrateInitialSettings(settings);
     setState(() {
-      _apiKeyController.text = settings.apiKey;
-      _keywordsController.text = settings.keywords.join('\n');
+      _apiKeyController.text = hydrated.apiKey;
+      _keywordsController.text = hydrated.keywords.join('\n');
       _selectedTime = TimeOfDay(
-        hour: settings.scheduledHour,
-        minute: settings.scheduledMinute,
+        hour: hydrated.scheduledHour,
+        minute: hydrated.scheduledMinute,
       );
-      _notificationsEnabled = settings.notificationEnabled;
+      _notificationsEnabled = hydrated.notificationEnabled;
       _initialized = true;
     });
+  }
+
+  NewsSchedulerInput _hydrateInitialSettings(NewsSchedulerInput settings) {
+    final apiKey = settings.apiKey.trim().isNotEmpty
+        ? settings.apiKey.trim()
+        : ApiKeys.geminiApiKeyFromEnv;
+    final keywords = settings.keywords.isNotEmpty
+        ? settings.keywords
+        : kDefaultNewsKeywords;
+
+    return settings.copyWith(apiKey: apiKey, keywords: keywords);
   }
 
   Future<bool> _handleWillPop(NewsSchedulerInput settings) async {
@@ -94,13 +108,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   bool _hasUnsavedChanges(NewsSchedulerInput settings) {
+    final baseline = _hydrateInitialSettings(settings);
     final current = _buildCurrentSettings(settings.failureCount);
-    return current.apiKey != settings.apiKey ||
-        current.scheduledHour != settings.scheduledHour ||
-        current.scheduledMinute != settings.scheduledMinute ||
-        current.notificationEnabled != settings.notificationEnabled ||
+    return current.apiKey != baseline.apiKey ||
+        current.scheduledHour != baseline.scheduledHour ||
+        current.scheduledMinute != baseline.scheduledMinute ||
+        current.notificationEnabled != baseline.notificationEnabled ||
         _keywordSignature(current.keywords) !=
-            _keywordSignature(settings.keywords);
+            _keywordSignature(baseline.keywords);
   }
 
   NewsSchedulerInput _buildCurrentSettings(int failureCount) {
@@ -164,11 +179,25 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   }
 
   /// Runs news fetch immediately and shows feedback in settings screen.
-  Future<void> _runManualFetch() async {
+  Future<void> _runManualFetch(NewsSchedulerInput settings) async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
     final notifier = ref.read(newsActionControllerProvider.notifier);
     final messenger = ScaffoldMessenger.of(context);
+    final keywords = _parseKeywords(_keywordsController.text);
+    final nextSettings = NewsSchedulerInput(
+      apiKey: _apiKeyController.text.trim(),
+      keywords: keywords,
+      scheduledHour: _selectedTime.hour,
+      scheduledMinute: _selectedTime.minute,
+      notificationEnabled: _notificationsEnabled,
+      failureCount: settings.failureCount,
+    );
 
     try {
+      await notifier.updateSettings(nextSettings);
       await notifier.manualFetch();
       if (!mounted) return;
       messenger.showSnackBar(const SnackBar(content: Text('ニュースを取得しました。')));
@@ -229,7 +258,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                     decoration: InputDecoration(
                       labelText: 'Gemini APIキー',
                       border: const OutlineInputBorder(),
-                      helperText: '未入力時は .env の GEMINI_API_KEY を使用します',
+                      helperText:
+                          '未入力時は .env の GEMINI_API_KEY (または API_KEY) を使用します',
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() {
@@ -286,7 +316,9 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: isActionLoading ? null : _runManualFetch,
+                    onPressed: isActionLoading
+                        ? null
+                        : () => _runManualFetch(settings),
                     child: Text(isActionLoading ? '実行中...' : '今すぐ実行'),
                   ),
                 ],
