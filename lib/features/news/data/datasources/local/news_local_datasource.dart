@@ -12,7 +12,7 @@ abstract class NewsLocalDataSource {
 
   Future<void> deleteExpired(DateTime threshold);
 
-  Future<NewsArticleModel?> findByStableId(String stableId);
+  Future<NewsArticleModel?> findBySourceUrl(String sourceUrl);
 
   Future<List<NewsArticleModel>> getAllNews();
 
@@ -79,9 +79,12 @@ class IsarNewsLocalDataSource implements NewsLocalDataSource {
   }
 
   @override
-  Future<NewsArticleModel?> findByStableId(String stableId) async {
+  Future<NewsArticleModel?> findBySourceUrl(String sourceUrl) async {
     final isar = await _isarFuture;
-    return isar.newsArticleModels.filter().stableIdEqualTo(stableId).findFirst();
+    return isar.newsArticleModels
+        .filter()
+        .sourceUrlEqualTo(sourceUrl)
+        .findFirst();
   }
 
   @override

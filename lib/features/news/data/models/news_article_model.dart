@@ -11,28 +11,28 @@ class NewsArticleModel {
   Id id = Isar.autoIncrement;
 
   @Index(unique: true, replace: true)
-  late String stableId;
+  late String sourceUrl;
 
+  late String articleId;
   late String title;
   late String summary;
-  late String source;
-  @Index()
-  late String url;
-
-  late DateTime publishedAt;
-  late String keywords;
+  late String content;
+  late String category;
+  late int importance;
+  late String date;
   late DateTime fetchedAt;
   late bool isPinned;
 
   NewsArticle toEntity() {
     return NewsArticle(
-      id: stableId,
+      id: articleId,
       title: title,
       summary: summary,
-      source: source,
-      url: url,
-      publishedAt: publishedAt,
-      keywords: keywords.split(',').where((e) => e.isNotEmpty).toList(),
+      content: content,
+      category: category,
+      sourceUrl: sourceUrl,
+      importance: importance,
+      date: date,
       fetchedAt: fetchedAt,
       isPinned: isPinned,
     );
@@ -40,13 +40,14 @@ class NewsArticleModel {
 
   static NewsArticleModel fromEntity(NewsArticle article) {
     final model = NewsArticleModel();
-    model.stableId = article.id;
+    model.sourceUrl = article.sourceUrl;
+    model.articleId = article.id;
     model.title = article.title;
     model.summary = article.summary;
-    model.source = article.source;
-    model.url = article.url;
-    model.publishedAt = article.publishedAt;
-    model.keywords = article.keywords.join(',');
+    model.content = article.content;
+    model.category = article.category;
+    model.importance = article.importance;
+    model.date = article.date;
     model.fetchedAt = article.fetchedAt;
     model.isPinned = article.isPinned;
     return model;

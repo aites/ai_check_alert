@@ -3,10 +3,11 @@ class NewsArticle {
     required this.id,
     required this.title,
     required this.summary,
-    required this.source,
-    required this.url,
-    required this.publishedAt,
-    required this.keywords,
+    required this.content,
+    required this.category,
+    required this.sourceUrl,
+    required this.importance,
+    required this.date,
     required this.fetchedAt,
     this.isPinned = false,
   });
@@ -14,21 +15,29 @@ class NewsArticle {
   final String id;
   final String title;
   final String summary;
-  final String source;
-  final String url;
-  final DateTime publishedAt;
-  final List<String> keywords;
+  final String content;
+  final String category;
+  final String sourceUrl;
+  final int importance;
+  final String date;
   final DateTime fetchedAt;
   final bool isPinned;
+
+  // Temporary compatibility accessors for existing UI/read paths.
+  String get source => category;
+  String get url => sourceUrl;
+  DateTime get publishedAt => DateTime.tryParse(date) ?? fetchedAt;
+  List<String> get keywords => const <String>[];
 
   NewsArticle copyWith({
     String? id,
     String? title,
     String? summary,
-    String? source,
-    String? url,
-    DateTime? publishedAt,
-    List<String>? keywords,
+    String? content,
+    String? category,
+    String? sourceUrl,
+    int? importance,
+    String? date,
     DateTime? fetchedAt,
     bool? isPinned,
   }) {
@@ -36,15 +45,15 @@ class NewsArticle {
       id: id ?? this.id,
       title: title ?? this.title,
       summary: summary ?? this.summary,
-      source: source ?? this.source,
-      url: url ?? this.url,
-      publishedAt: publishedAt ?? this.publishedAt,
-      keywords: keywords ?? this.keywords,
+      content: content ?? this.content,
+      category: category ?? this.category,
+      sourceUrl: sourceUrl ?? this.sourceUrl,
+      importance: importance ?? this.importance,
+      date: date ?? this.date,
       fetchedAt: fetchedAt ?? this.fetchedAt,
       isPinned: isPinned ?? this.isPinned,
     );
   }
 
-  String get displayDateText => '${publishedAt.year}/${publishedAt.month}/${publishedAt.day}';
+  String get displayDateText => date;
 }
-

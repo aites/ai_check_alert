@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'config/router.dart';
+import 'features/news/data/datasources/local/news_local_datasource.dart';
 import 'features/notification/services/notification_service.dart';
 import 'features/scheduler/services/scheduler_service.dart';
 import 'features/scheduler/services/scheduler_worker.dart';
@@ -15,6 +16,7 @@ class App extends StatefulWidget {
 
 class _AppState extends State<App> {
   final _notificationService = const NotificationService();
+  final _newsLocalDataSource = IsarNewsLocalDataSource();
 
   @override
   void initState() {
@@ -29,10 +31,15 @@ class _AppState extends State<App> {
       },
     );
 
-    await Workmanager().initialize(
-      newsWorkerDispatcher,
-    );
+    await Workmanager().initialize(newsWorkerDispatcher);
+    await _purgeExpiredNewsOnAppStart();
     await const SchedulerService().restoreScheduleOnAppStart();
+  }
+
+  /// Deletes persisted news older than 14 days during app startup.
+  Future<void> _purgeExpiredNewsOnAppStart() async {
+    final threshold = DateTime.now().subtract(const Duration(days: 14));
+    await _newsLocalDataSource.deleteExpired(threshold);
   }
 
   @override

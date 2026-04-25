@@ -43,9 +43,10 @@ void newsWorkerDispatcher() {
       await scheduler.saveSettings(settings.copyWith(failureCount: 0));
       await scheduler.scheduleDaily(settings);
       return true;
-    } catch (error, stack) {
-      final message =
-          error is AppError ? error.userMessage : 'ニュース取得中に予期しないエラーが発生しました。';
+    } catch (error) {
+      final message = error is AppError
+          ? error.userMessage
+          : 'ニュース取得中に予期しないエラーが発生しました。';
 
       final failureCount = settings.failureCount + 1;
       final canRetry = error is AppError ? error.isRetryable : true;
@@ -57,9 +58,7 @@ void newsWorkerDispatcher() {
       }
 
       if (canRetry && failureCount <= 3) {
-        await notificationService.showError(
-          '$message (再試行回数: $failureCount)',
-        );
+        await notificationService.showError('$message (再試行回数: $failureCount)');
       } else {
         await notificationService.showError('ニュース取得が失敗しました。再設定を確認してください。');
       }

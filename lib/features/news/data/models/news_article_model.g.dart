@@ -15,51 +15,56 @@ extension GetNewsArticleModelCollection on Isar {
 
 const NewsArticleModelSchema = CollectionSchema(
   name: r'NewsArticleModel',
-  id: 1,
+  id: 4247726598344458782,
   properties: {
-    r'fetchedAt': PropertySchema(
+    r'articleId': PropertySchema(
       id: 0,
+      name: r'articleId',
+      type: IsarType.string,
+    ),
+    r'category': PropertySchema(
+      id: 1,
+      name: r'category',
+      type: IsarType.string,
+    ),
+    r'content': PropertySchema(
+      id: 2,
+      name: r'content',
+      type: IsarType.string,
+    ),
+    r'date': PropertySchema(
+      id: 3,
+      name: r'date',
+      type: IsarType.string,
+    ),
+    r'fetchedAt': PropertySchema(
+      id: 4,
       name: r'fetchedAt',
       type: IsarType.dateTime,
     ),
+    r'importance': PropertySchema(
+      id: 5,
+      name: r'importance',
+      type: IsarType.long,
+    ),
     r'isPinned': PropertySchema(
-      id: 1,
+      id: 6,
       name: r'isPinned',
       type: IsarType.bool,
     ),
-    r'keywords': PropertySchema(
-      id: 2,
-      name: r'keywords',
-      type: IsarType.string,
-    ),
-    r'publishedAt': PropertySchema(
-      id: 3,
-      name: r'publishedAt',
-      type: IsarType.dateTime,
-    ),
-    r'source': PropertySchema(
-      id: 4,
-      name: r'source',
-      type: IsarType.string,
-    ),
-    r'stableId': PropertySchema(
-      id: 5,
-      name: r'stableId',
+    r'sourceUrl': PropertySchema(
+      id: 7,
+      name: r'sourceUrl',
       type: IsarType.string,
     ),
     r'summary': PropertySchema(
-      id: 6,
+      id: 8,
       name: r'summary',
       type: IsarType.string,
     ),
     r'title': PropertySchema(
-      id: 7,
+      id: 9,
       name: r'title',
-      type: IsarType.string,
-    ),
-    r'url': PropertySchema(
-      id: 8,
-      name: r'url',
       type: IsarType.string,
     )
   },
@@ -69,27 +74,14 @@ const NewsArticleModelSchema = CollectionSchema(
   deserializeProp: _newsArticleModelDeserializeProp,
   idName: r'id',
   indexes: {
-    r'stableId': IndexSchema(
-      id: 2,
-      name: r'stableId',
+    r'sourceUrl': IndexSchema(
+      id: -4622358680545194972,
+      name: r'sourceUrl',
       unique: true,
       replace: true,
       properties: [
         IndexPropertySchema(
-          name: r'stableId',
-          type: IndexType.hash,
-          caseSensitive: true,
-        )
-      ],
-    ),
-    r'url': IndexSchema(
-      id: 3,
-      name: r'url',
-      unique: false,
-      replace: false,
-      properties: [
-        IndexPropertySchema(
-          name: r'url',
+          name: r'sourceUrl',
           type: IndexType.hash,
           caseSensitive: true,
         )
@@ -110,12 +102,13 @@ int _newsArticleModelEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
-  bytesCount += 3 + object.keywords.length * 3;
-  bytesCount += 3 + object.source.length * 3;
-  bytesCount += 3 + object.stableId.length * 3;
+  bytesCount += 3 + object.articleId.length * 3;
+  bytesCount += 3 + object.category.length * 3;
+  bytesCount += 3 + object.content.length * 3;
+  bytesCount += 3 + object.date.length * 3;
+  bytesCount += 3 + object.sourceUrl.length * 3;
   bytesCount += 3 + object.summary.length * 3;
   bytesCount += 3 + object.title.length * 3;
-  bytesCount += 3 + object.url.length * 3;
   return bytesCount;
 }
 
@@ -125,15 +118,16 @@ void _newsArticleModelSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeDateTime(offsets[0], object.fetchedAt);
-  writer.writeBool(offsets[1], object.isPinned);
-  writer.writeString(offsets[2], object.keywords);
-  writer.writeDateTime(offsets[3], object.publishedAt);
-  writer.writeString(offsets[4], object.source);
-  writer.writeString(offsets[5], object.stableId);
-  writer.writeString(offsets[6], object.summary);
-  writer.writeString(offsets[7], object.title);
-  writer.writeString(offsets[8], object.url);
+  writer.writeString(offsets[0], object.articleId);
+  writer.writeString(offsets[1], object.category);
+  writer.writeString(offsets[2], object.content);
+  writer.writeString(offsets[3], object.date);
+  writer.writeDateTime(offsets[4], object.fetchedAt);
+  writer.writeLong(offsets[5], object.importance);
+  writer.writeBool(offsets[6], object.isPinned);
+  writer.writeString(offsets[7], object.sourceUrl);
+  writer.writeString(offsets[8], object.summary);
+  writer.writeString(offsets[9], object.title);
 }
 
 NewsArticleModel _newsArticleModelDeserialize(
@@ -143,16 +137,17 @@ NewsArticleModel _newsArticleModelDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = NewsArticleModel();
-  object.fetchedAt = reader.readDateTime(offsets[0]);
+  object.articleId = reader.readString(offsets[0]);
+  object.category = reader.readString(offsets[1]);
+  object.content = reader.readString(offsets[2]);
+  object.date = reader.readString(offsets[3]);
+  object.fetchedAt = reader.readDateTime(offsets[4]);
   object.id = id;
-  object.isPinned = reader.readBool(offsets[1]);
-  object.keywords = reader.readString(offsets[2]);
-  object.publishedAt = reader.readDateTime(offsets[3]);
-  object.source = reader.readString(offsets[4]);
-  object.stableId = reader.readString(offsets[5]);
-  object.summary = reader.readString(offsets[6]);
-  object.title = reader.readString(offsets[7]);
-  object.url = reader.readString(offsets[8]);
+  object.importance = reader.readLong(offsets[5]);
+  object.isPinned = reader.readBool(offsets[6]);
+  object.sourceUrl = reader.readString(offsets[7]);
+  object.summary = reader.readString(offsets[8]);
+  object.title = reader.readString(offsets[9]);
   return object;
 }
 
@@ -164,22 +159,24 @@ P _newsArticleModelDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
       return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 7:
       return (reader.readString(offset)) as P;
     case 8:
+      return (reader.readString(offset)) as P;
+    case 9:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -200,58 +197,58 @@ void _newsArticleModelAttach(
 }
 
 extension NewsArticleModelByIndex on IsarCollection<NewsArticleModel> {
-  Future<NewsArticleModel?> getByStableId(String stableId) {
-    return getByIndex(r'stableId', [stableId]);
+  Future<NewsArticleModel?> getBySourceUrl(String sourceUrl) {
+    return getByIndex(r'sourceUrl', [sourceUrl]);
   }
 
-  NewsArticleModel? getByStableIdSync(String stableId) {
-    return getByIndexSync(r'stableId', [stableId]);
+  NewsArticleModel? getBySourceUrlSync(String sourceUrl) {
+    return getByIndexSync(r'sourceUrl', [sourceUrl]);
   }
 
-  Future<bool> deleteByStableId(String stableId) {
-    return deleteByIndex(r'stableId', [stableId]);
+  Future<bool> deleteBySourceUrl(String sourceUrl) {
+    return deleteByIndex(r'sourceUrl', [sourceUrl]);
   }
 
-  bool deleteByStableIdSync(String stableId) {
-    return deleteByIndexSync(r'stableId', [stableId]);
+  bool deleteBySourceUrlSync(String sourceUrl) {
+    return deleteByIndexSync(r'sourceUrl', [sourceUrl]);
   }
 
-  Future<List<NewsArticleModel?>> getAllByStableId(
-      List<String> stableIdValues) {
-    final values = stableIdValues.map((e) => [e]).toList();
-    return getAllByIndex(r'stableId', values);
+  Future<List<NewsArticleModel?>> getAllBySourceUrl(
+      List<String> sourceUrlValues) {
+    final values = sourceUrlValues.map((e) => [e]).toList();
+    return getAllByIndex(r'sourceUrl', values);
   }
 
-  List<NewsArticleModel?> getAllByStableIdSync(List<String> stableIdValues) {
-    final values = stableIdValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'stableId', values);
+  List<NewsArticleModel?> getAllBySourceUrlSync(List<String> sourceUrlValues) {
+    final values = sourceUrlValues.map((e) => [e]).toList();
+    return getAllByIndexSync(r'sourceUrl', values);
   }
 
-  Future<int> deleteAllByStableId(List<String> stableIdValues) {
-    final values = stableIdValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'stableId', values);
+  Future<int> deleteAllBySourceUrl(List<String> sourceUrlValues) {
+    final values = sourceUrlValues.map((e) => [e]).toList();
+    return deleteAllByIndex(r'sourceUrl', values);
   }
 
-  int deleteAllByStableIdSync(List<String> stableIdValues) {
-    final values = stableIdValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'stableId', values);
+  int deleteAllBySourceUrlSync(List<String> sourceUrlValues) {
+    final values = sourceUrlValues.map((e) => [e]).toList();
+    return deleteAllByIndexSync(r'sourceUrl', values);
   }
 
-  Future<Id> putByStableId(NewsArticleModel object) {
-    return putByIndex(r'stableId', object);
+  Future<Id> putBySourceUrl(NewsArticleModel object) {
+    return putByIndex(r'sourceUrl', object);
   }
 
-  Id putByStableIdSync(NewsArticleModel object, {bool saveLinks = true}) {
-    return putByIndexSync(r'stableId', object, saveLinks: saveLinks);
+  Id putBySourceUrlSync(NewsArticleModel object, {bool saveLinks = true}) {
+    return putByIndexSync(r'sourceUrl', object, saveLinks: saveLinks);
   }
 
-  Future<List<Id>> putAllByStableId(List<NewsArticleModel> objects) {
-    return putAllByIndex(r'stableId', objects);
+  Future<List<Id>> putAllBySourceUrl(List<NewsArticleModel> objects) {
+    return putAllByIndex(r'sourceUrl', objects);
   }
 
-  List<Id> putAllByStableIdSync(List<NewsArticleModel> objects,
+  List<Id> putAllBySourceUrlSync(List<NewsArticleModel> objects,
       {bool saveLinks = true}) {
-    return putAllByIndexSync(r'stableId', objects, saveLinks: saveLinks);
+    return putAllByIndexSync(r'sourceUrl', objects, saveLinks: saveLinks);
   }
 }
 
@@ -334,89 +331,44 @@ extension NewsArticleModelQueryWhere
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterWhereClause>
-      stableIdEqualTo(String stableId) {
+      sourceUrlEqualTo(String sourceUrl) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'stableId',
-        value: [stableId],
+        indexName: r'sourceUrl',
+        value: [sourceUrl],
       ));
     });
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterWhereClause>
-      stableIdNotEqualTo(String stableId) {
+      sourceUrlNotEqualTo(String sourceUrl) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'stableId',
+              indexName: r'sourceUrl',
               lower: [],
-              upper: [stableId],
+              upper: [sourceUrl],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'stableId',
-              lower: [stableId],
+              indexName: r'sourceUrl',
+              lower: [sourceUrl],
               includeLower: false,
               upper: [],
             ));
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'stableId',
-              lower: [stableId],
+              indexName: r'sourceUrl',
+              lower: [sourceUrl],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'stableId',
+              indexName: r'sourceUrl',
               lower: [],
-              upper: [stableId],
-              includeUpper: false,
-            ));
-      }
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterWhereClause>
-      urlEqualTo(String url) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'url',
-        value: [url],
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterWhereClause>
-      urlNotEqualTo(String url) {
-    return QueryBuilder.apply(this, (query) {
-      if (query.whereSort == Sort.asc) {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'url',
-              lower: [],
-              upper: [url],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'url',
-              lower: [url],
-              includeLower: false,
-              upper: [],
-            ));
-      } else {
-        return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'url',
-              lower: [url],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'url',
-              lower: [],
-              upper: [url],
+              upper: [sourceUrl],
               includeUpper: false,
             ));
       }
@@ -426,6 +378,550 @@ extension NewsArticleModelQueryWhere
 
 extension NewsArticleModelQueryFilter
     on QueryBuilder<NewsArticleModel, NewsArticleModel, QFilterCondition> {
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      articleIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'articleId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      articleIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'articleId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      articleIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'articleId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      articleIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'articleId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      articleIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'articleId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      articleIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'articleId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      articleIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'articleId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      articleIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'articleId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      articleIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'articleId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      articleIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'articleId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      categoryEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      categoryGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      categoryLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      categoryBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'category',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      categoryStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      categoryEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      categoryContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'category',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      categoryMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'category',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      categoryIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'category',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      categoryIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'category',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      contentEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'content',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      contentGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'content',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      contentLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'content',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      contentBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'content',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      contentStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'content',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      contentEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'content',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      contentContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'content',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      contentMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'content',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      contentIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'content',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      contentIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'content',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      dateEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'date',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      dateGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'date',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      dateLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'date',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      dateBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'date',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      dateStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'date',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      dateEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'date',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      dateContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'date',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      dateMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'date',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      dateIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'date',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      dateIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'date',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
       fetchedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
@@ -539,6 +1035,62 @@ extension NewsArticleModelQueryFilter
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      importanceEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'importance',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      importanceGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'importance',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      importanceLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'importance',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
+      importanceBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'importance',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
       isPinnedEqualTo(bool value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -549,13 +1101,13 @@ extension NewsArticleModelQueryFilter
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      keywordsEqualTo(
+      sourceUrlEqualTo(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'keywords',
+        property: r'sourceUrl',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -563,7 +1115,7 @@ extension NewsArticleModelQueryFilter
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      keywordsGreaterThan(
+      sourceUrlGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -571,7 +1123,7 @@ extension NewsArticleModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'keywords',
+        property: r'sourceUrl',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -579,7 +1131,7 @@ extension NewsArticleModelQueryFilter
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      keywordsLessThan(
+      sourceUrlLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
@@ -587,7 +1139,7 @@ extension NewsArticleModelQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'keywords',
+        property: r'sourceUrl',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -595,7 +1147,7 @@ extension NewsArticleModelQueryFilter
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      keywordsBetween(
+      sourceUrlBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -604,7 +1156,7 @@ extension NewsArticleModelQueryFilter
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'keywords',
+        property: r'sourceUrl',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -615,13 +1167,13 @@ extension NewsArticleModelQueryFilter
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      keywordsStartsWith(
+      sourceUrlStartsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'keywords',
+        property: r'sourceUrl',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -629,13 +1181,13 @@ extension NewsArticleModelQueryFilter
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      keywordsEndsWith(
+      sourceUrlEndsWith(
     String value, {
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'keywords',
+        property: r'sourceUrl',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -643,10 +1195,10 @@ extension NewsArticleModelQueryFilter
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      keywordsContains(String value, {bool caseSensitive = true}) {
+      sourceUrlContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.contains(
-        property: r'keywords',
+        property: r'sourceUrl',
         value: value,
         caseSensitive: caseSensitive,
       ));
@@ -654,10 +1206,10 @@ extension NewsArticleModelQueryFilter
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      keywordsMatches(String pattern, {bool caseSensitive = true}) {
+      sourceUrlMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.matches(
-        property: r'keywords',
+        property: r'sourceUrl',
         wildcard: pattern,
         caseSensitive: caseSensitive,
       ));
@@ -665,348 +1217,20 @@ extension NewsArticleModelQueryFilter
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      keywordsIsEmpty() {
+      sourceUrlIsEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'keywords',
+        property: r'sourceUrl',
         value: '',
       ));
     });
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      keywordsIsNotEmpty() {
+      sourceUrlIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'keywords',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      publishedAtEqualTo(DateTime value) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'publishedAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      publishedAtGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'publishedAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      publishedAtLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'publishedAt',
-        value: value,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      publishedAtBetween(
-    DateTime lower,
-    DateTime upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'publishedAt',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      sourceEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'source',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      sourceGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'source',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      sourceLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'source',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      sourceBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'source',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      sourceStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'source',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      sourceEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'source',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      sourceContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'source',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      sourceMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'source',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      sourceIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'source',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      sourceIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'source',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      stableIdEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'stableId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      stableIdGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'stableId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      stableIdLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'stableId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      stableIdBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'stableId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      stableIdStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'stableId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      stableIdEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'stableId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      stableIdContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'stableId',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      stableIdMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'stableId',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      stableIdIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'stableId',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      stableIdIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'stableId',
+        property: r'sourceUrl',
         value: '',
       ));
     });
@@ -1283,142 +1507,6 @@ extension NewsArticleModelQueryFilter
       ));
     });
   }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      urlEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'url',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      urlGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'url',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      urlLessThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'url',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      urlBetween(
-    String lower,
-    String upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'url',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      urlStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'url',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      urlEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'url',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      urlContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'url',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      urlMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'url',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      urlIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'url',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterFilterCondition>
-      urlIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'url',
-        value: '',
-      ));
-    });
-  }
 }
 
 extension NewsArticleModelQueryObject
@@ -1430,6 +1518,61 @@ extension NewsArticleModelQueryLinks
 extension NewsArticleModelQuerySortBy
     on QueryBuilder<NewsArticleModel, NewsArticleModel, QSortBy> {
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      sortByArticleId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'articleId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      sortByArticleIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'articleId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      sortByCategory() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      sortByCategoryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      sortByContent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'content', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      sortByContentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'content', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy> sortByDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'date', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      sortByDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'date', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
       sortByFetchedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fetchedAt', Sort.asc);
@@ -1440,6 +1583,20 @@ extension NewsArticleModelQuerySortBy
       sortByFetchedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'fetchedAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      sortByImportance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'importance', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      sortByImportanceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'importance', Sort.desc);
     });
   }
 
@@ -1458,58 +1615,16 @@ extension NewsArticleModelQuerySortBy
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      sortByKeywords() {
+      sortBySourceUrl() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'keywords', Sort.asc);
+      return query.addSortBy(r'sourceUrl', Sort.asc);
     });
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      sortByKeywordsDesc() {
+      sortBySourceUrlDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'keywords', Sort.desc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      sortByPublishedAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'publishedAt', Sort.asc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      sortByPublishedAtDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'publishedAt', Sort.desc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      sortBySource() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'source', Sort.asc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      sortBySourceDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'source', Sort.desc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      sortByStableId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'stableId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      sortByStableIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'stableId', Sort.desc);
+      return query.addSortBy(r'sourceUrl', Sort.desc);
     });
   }
 
@@ -1539,23 +1654,65 @@ extension NewsArticleModelQuerySortBy
       return query.addSortBy(r'title', Sort.desc);
     });
   }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy> sortByUrl() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'url', Sort.asc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      sortByUrlDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'url', Sort.desc);
-    });
-  }
 }
 
 extension NewsArticleModelQuerySortThenBy
     on QueryBuilder<NewsArticleModel, NewsArticleModel, QSortThenBy> {
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      thenByArticleId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'articleId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      thenByArticleIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'articleId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      thenByCategory() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      thenByCategoryDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'category', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      thenByContent() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'content', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      thenByContentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'content', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy> thenByDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'date', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      thenByDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'date', Sort.desc);
+    });
+  }
+
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
       thenByFetchedAt() {
     return QueryBuilder.apply(this, (query) {
@@ -1584,6 +1741,20 @@ extension NewsArticleModelQuerySortThenBy
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      thenByImportance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'importance', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
+      thenByImportanceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'importance', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
       thenByIsPinned() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isPinned', Sort.asc);
@@ -1598,58 +1769,16 @@ extension NewsArticleModelQuerySortThenBy
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      thenByKeywords() {
+      thenBySourceUrl() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'keywords', Sort.asc);
+      return query.addSortBy(r'sourceUrl', Sort.asc);
     });
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      thenByKeywordsDesc() {
+      thenBySourceUrlDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'keywords', Sort.desc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      thenByPublishedAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'publishedAt', Sort.asc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      thenByPublishedAtDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'publishedAt', Sort.desc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      thenBySource() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'source', Sort.asc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      thenBySourceDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'source', Sort.desc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      thenByStableId() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'stableId', Sort.asc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      thenByStableIdDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'stableId', Sort.desc);
+      return query.addSortBy(r'sourceUrl', Sort.desc);
     });
   }
 
@@ -1679,27 +1808,49 @@ extension NewsArticleModelQuerySortThenBy
       return query.addSortBy(r'title', Sort.desc);
     });
   }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy> thenByUrl() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'url', Sort.asc);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QAfterSortBy>
-      thenByUrlDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'url', Sort.desc);
-    });
-  }
 }
 
 extension NewsArticleModelQueryWhereDistinct
     on QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct> {
   QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct>
+      distinctByArticleId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'articleId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct>
+      distinctByCategory({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'category', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct> distinctByContent(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'content', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct> distinctByDate(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'date', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct>
       distinctByFetchedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'fetchedAt');
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct>
+      distinctByImportance() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'importance');
     });
   }
 
@@ -1711,30 +1862,9 @@ extension NewsArticleModelQueryWhereDistinct
   }
 
   QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct>
-      distinctByKeywords({bool caseSensitive = true}) {
+      distinctBySourceUrl({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'keywords', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct>
-      distinctByPublishedAt() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'publishedAt');
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct> distinctBySource(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'source', caseSensitive: caseSensitive);
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct>
-      distinctByStableId({bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'stableId', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'sourceUrl', caseSensitive: caseSensitive);
     });
   }
 
@@ -1751,13 +1881,6 @@ extension NewsArticleModelQueryWhereDistinct
       return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
     });
   }
-
-  QueryBuilder<NewsArticleModel, NewsArticleModel, QDistinct> distinctByUrl(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'url', caseSensitive: caseSensitive);
-    });
-  }
 }
 
 extension NewsArticleModelQueryProperty
@@ -1768,10 +1891,40 @@ extension NewsArticleModelQueryProperty
     });
   }
 
+  QueryBuilder<NewsArticleModel, String, QQueryOperations> articleIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'articleId');
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, String, QQueryOperations> categoryProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'category');
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, String, QQueryOperations> contentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'content');
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, String, QQueryOperations> dateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'date');
+    });
+  }
+
   QueryBuilder<NewsArticleModel, DateTime, QQueryOperations>
       fetchedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'fetchedAt');
+    });
+  }
+
+  QueryBuilder<NewsArticleModel, int, QQueryOperations> importanceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'importance');
     });
   }
 
@@ -1781,28 +1934,9 @@ extension NewsArticleModelQueryProperty
     });
   }
 
-  QueryBuilder<NewsArticleModel, String, QQueryOperations> keywordsProperty() {
+  QueryBuilder<NewsArticleModel, String, QQueryOperations> sourceUrlProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'keywords');
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, DateTime, QQueryOperations>
-      publishedAtProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'publishedAt');
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, String, QQueryOperations> sourceProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'source');
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, String, QQueryOperations> stableIdProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'stableId');
+      return query.addPropertyName(r'sourceUrl');
     });
   }
 
@@ -1815,12 +1949,6 @@ extension NewsArticleModelQueryProperty
   QueryBuilder<NewsArticleModel, String, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'title');
-    });
-  }
-
-  QueryBuilder<NewsArticleModel, String, QQueryOperations> urlProperty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'url');
     });
   }
 }

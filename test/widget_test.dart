@@ -8,10 +8,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:ai_check_alret/main.dart';
+import 'package:ai_check_alret/app.dart';
 
 void main() {
-  testWidgets('App starts and renders home screen', (WidgetTester tester) async {
+  testWidgets('App starts and renders home screen', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const ProviderScope(child: App()));
     await tester.pumpAndSettle();
 

@@ -1,7 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../../scheduler/services/scheduler_input.dart';
-import '../../../scheduler/services/scheduler_service.dart';
 import '../../domain/usecases/fetch_news_by_schedule.dart';
 import '../providers/news_providers.dart';
 
@@ -40,6 +39,7 @@ class NewsActionController extends _$NewsActionController {
       final service = ref.read(schedulerServiceProvider);
       await service.saveSettings(settings);
       await service.scheduleDaily(settings);
+      ref.invalidate(newsSchedulerSettingsProvider);
       state = const AsyncData(null);
     } catch (error, stack) {
       state = AsyncError(error, stack);

@@ -6,13 +6,14 @@ import '../datasources/local/news_local_datasource.dart';
 import '../datasources/remote/gemini_news_datasource.dart';
 import '../mappers/news_mapper.dart';
 
+/// Remote/local data synchronization repository for news articles.
 class NewsRepositoryImpl implements NewsRepository {
   NewsRepositoryImpl({
     required GeminiNewsDataSource remoteDataSource,
     required NewsLocalDataSource localDataSource,
-    this.retention = const Duration(days: 7),
-  })  : _remoteDataSource = remoteDataSource,
-        _localDataSource = localDataSource;
+    this.retention = const Duration(days: 14),
+  }) : _remoteDataSource = remoteDataSource,
+       _localDataSource = localDataSource;
 
   final GeminiNewsDataSource _remoteDataSource;
   final NewsLocalDataSource _localDataSource;
@@ -49,9 +50,10 @@ class NewsRepositoryImpl implements NewsRepository {
 
   @override
   Stream<List<NewsArticle>> watchNews() {
-    return _localDataSource.watchNews().map((models) => models
-        .map((model) => model.toDomain())
-        .toList(growable: false));
+    return _localDataSource.watchNews().map(
+      (models) =>
+          models.map((model) => model.toDomain()).toList(growable: false),
+    );
   }
 
   @override
@@ -63,7 +65,7 @@ class NewsRepositoryImpl implements NewsRepository {
   @override
   Future<NewsArticle?> findByUrl(String url) async {
     final all = await _localDataSource.getAllNews();
-    final found = all.firstWhereOrNull((item) => item.url == url);
+    final found = all.firstWhereOrNull((item) => item.sourceUrl == url);
     return found?.toDomain();
   }
 
@@ -71,7 +73,7 @@ class NewsRepositoryImpl implements NewsRepository {
     final seen = <String>{};
     final result = <NewsArticle>[];
     for (final article in source) {
-      final key = article.url.trim().toLowerCase();
+      final key = article.sourceUrl.trim().toLowerCase();
       if (key.isEmpty || seen.contains(key)) continue;
       seen.add(key);
       result.add(article);

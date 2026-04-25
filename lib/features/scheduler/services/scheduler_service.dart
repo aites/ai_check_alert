@@ -28,10 +28,14 @@ class SchedulerService {
     return NewsSchedulerInput(
       apiKey: prefs.getString(_prefsApiKey) ?? '',
       keywords: parsedKeywords,
-      scheduledHour: prefs.getInt(_prefsHour) ?? NewsSchedulerInput.defaults.scheduledHour,
-      scheduledMinute: prefs.getInt(_prefsMinute) ?? NewsSchedulerInput.defaults.scheduledMinute,
+      scheduledHour:
+          prefs.getInt(_prefsHour) ?? NewsSchedulerInput.defaults.scheduledHour,
+      scheduledMinute:
+          prefs.getInt(_prefsMinute) ??
+          NewsSchedulerInput.defaults.scheduledMinute,
       notificationEnabled:
-          prefs.getBool(_prefsNotificationEnabled) ?? NewsSchedulerInput.defaults.notificationEnabled,
+          prefs.getBool(_prefsNotificationEnabled) ??
+          NewsSchedulerInput.defaults.notificationEnabled,
       failureCount: prefs.getInt(_prefsFailureCount) ?? 0,
     );
   }
@@ -43,7 +47,10 @@ class SchedulerService {
     await prefs.setString(_prefsKeywords, data['keywords'] as String);
     await prefs.setInt(_prefsHour, data['scheduledHour'] as int);
     await prefs.setInt(_prefsMinute, data['scheduledMinute'] as int);
-    await prefs.setBool(_prefsNotificationEnabled, data['notificationEnabled'] == 1);
+    await prefs.setBool(
+      _prefsNotificationEnabled,
+      data['notificationEnabled'] == 1,
+    );
     await prefs.setInt(_prefsFailureCount, data['failureCount'] as int);
   }
 
@@ -73,24 +80,19 @@ class SchedulerService {
       initialDelay: initialDelay,
       inputData: input.toWorkerInput(),
       existingWorkPolicy: ExistingWorkPolicy.replace,
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-      ),
+      constraints: Constraints(networkType: NetworkType.connected),
     );
   }
 
   Future<void> scheduleRetry(NewsSchedulerInput input, Duration delay) async {
-    final retryInput = input.copyWith(failureCount: input.failureCount + 1);
-    await saveSettings(retryInput);
+    await saveSettings(input);
     await Workmanager().registerOneOffTask(
-      '${_taskUniqueName}_retry_${retryInput.failureCount}',
+      '${_taskUniqueName}_retry_${input.failureCount}',
       _taskName,
       initialDelay: delay,
-      inputData: retryInput.toWorkerInput(),
+      inputData: input.toWorkerInput(),
       existingWorkPolicy: ExistingWorkPolicy.replace,
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-      ),
+      constraints: Constraints(networkType: NetworkType.connected),
     );
   }
 
