@@ -79,6 +79,12 @@ class GeminiNewsDataSourceImpl implements GeminiNewsDataSource {
         if (rawUrl == null || rawUrl.isEmpty) {
           continue;
         }
+        if (!_isSupportedSourceUrl(rawUrl)) {
+          continue;
+        }
+        if (!await _isLikelyReachableSourceUrl(rawUrl)) {
+          continue;
+        }
 
         final articleId = record['id']?.toString().trim();
         final title = record['title']?.toString().trim();
@@ -177,6 +183,12 @@ class GeminiNewsDataSourceImpl implements GeminiNewsDataSource {
 対象トピックは「$defaultTopics, ${keywords.join(', ')}」。
 date=$date の時点で、過去24時間の信頼できる最新情報を最大$maxCount件、Google検索ベースで選定してください。
 一次ソース（GitHub公式、公式ドキュメント、Arxiv、公式ブログ）を優先し、検証不能な情報は除外してください。
+source_url はリンク切れを避けるため、以下を必ず満たしてください:
+- http/https の絶対URLのみ（相対URL・javascript・mailto禁止）
+- URL短縮サービス（t.co, bit.ly 等）は禁止。最終遷移先の正規URLを使う
+- 取得時点で HEAD または GET で到達可能（2xx または 3xx）を確認する
+- 404 / 410 / 451 を返すURL、認証必須で一般閲覧できないURL、トップページのみの曖昧URLは禁止
+- 可能な限り記事本文の永久リンク（permalink）を使用する
 信頼できる情報が無ければ articles は空配列で返してください。
 出力はJSONのみ。説明文やMarkdownは禁止。
 title/summary/content/category は自然な日本語。
@@ -503,6 +515,54 @@ importance は 1-5 の整数。
         .where((e) => e.isNotEmpty)
         .toSet()
         .toList();
+  }
+
+  /// Accepts only absolute HTTP/HTTPS URLs with non-empty host.
+  bool _isSupportedSourceUrl(String rawUrl) {
+    final uri = Uri.tryParse(rawUrl);
+    if (uri == null || !uri.isAbsolute || uri.host.trim().isEmpty) {
+      return false;
+    }
+    return uri.scheme == 'https' || uri.scheme == 'http';
+  }
+
+  /// Best-effort URL health check to avoid obvious dead links.
+  ///
+  /// This method only rejects definitively broken statuses like 404/410/451.
+  /// For transient network failures, it keeps the URL to avoid false negatives.
+  Future<bool> _isLikelyReachableSourceUrl(String rawUrl) async {
+    final uri = Uri.tryParse(rawUrl);
+    if (uri == null) {
+      return false;
+    }
+
+    final client = http.Client();
+    try {
+      final headResponse = await client
+          .head(uri)
+          .timeout(const Duration(seconds: 8));
+      if (_isDefinitivelyBrokenStatus(headResponse.statusCode)) {
+        return false;
+      }
+      if (headResponse.statusCode == 405) {
+        final getResponse = await client
+            .get(uri)
+            .timeout(const Duration(seconds: 8));
+        return !_isDefinitivelyBrokenStatus(getResponse.statusCode);
+      }
+      return true;
+    } on TimeoutException {
+      return true;
+    } catch (_) {
+      return true;
+    } finally {
+      client.close();
+    }
+  }
+
+  /// Statuses that indicate the URL is unavailable for normal users.
+  bool _isDefinitivelyBrokenStatus(int statusCode) {
+    return statusCode == 404 || statusCode == 410 || statusCode == 451;
   }
 
   String _validateDate(String? raw) {

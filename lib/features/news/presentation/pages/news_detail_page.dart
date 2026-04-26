@@ -97,6 +97,15 @@ class _NewsDetailBody extends StatelessWidget {
     }
   }
 
+  /// Copies article title to clipboard.
+  Future<void> _copyTitle(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: article.title));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('タイトルをコピーしました。')));
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -107,7 +116,19 @@ class _NewsDetailBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(article.title, style: textTheme.headlineSmall),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(article.title, style: textTheme.headlineSmall),
+              ),
+              IconButton(
+                onPressed: () => _copyTitle(context),
+                tooltip: 'タイトルをコピー',
+                icon: const Icon(Icons.copy_outlined),
+              ),
+            ],
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
